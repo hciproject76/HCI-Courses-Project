@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'HCI',
+    'message',
+    'report',
+    'account',
 ]
 
 MIDDLEWARE = [
@@ -150,6 +153,8 @@ LOGGING = {
         },
     },
 }
+
+AUTH_USER_MODEL = 'account.MyUser'
 
 settings_file = open("settings.json")
 SETTINGS_JSON = json.loads(settings_file.read())
