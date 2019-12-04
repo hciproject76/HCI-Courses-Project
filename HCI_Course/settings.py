@@ -164,6 +164,8 @@ EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = os.environ['EMAIL_PORT']
 EMAIL_ACTIVATION = os.environ['EMAIL_ACTIVATION']
 EMAIL_PASSWORD_RESET = os.environ['EMAIL_PASSWORD_RESET']
+RECAPTCHA_KEY = os.environ['reCaptcha_key']
+RECAPTCHA_URL = os.environ['reCaptcha_url']
 
 import nltk
 
