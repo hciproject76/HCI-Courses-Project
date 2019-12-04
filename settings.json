@@ -1,8 +1,8 @@
  {
   "EMAIL_USE_TLS": true,
-  "EMAIL_HOST": "smtp.gmail.com",
-  "EMAIL_HOST_USER": "hciproject76@gmail.com",
-  "EMAIL_HOST_PASSWORD": "longa=0;;",
+  "EMAIL_HOST": "smtp-relay.sendinblue.com",
+  "EMAIL_HOST_USER": "keyvankhademi@gmail.com",
+  "EMAIL_HOST_PASSWORD": "6RSFhT2pKQUwGdxE",
   "EMAIL_PORT": 587,
 
   "reCaptcha_key": "6LeEo8MUAAAAANw2wGTFYVmITjKdH4Yz0Xt6keKE",
