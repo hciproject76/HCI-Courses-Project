@@ -156,6 +156,8 @@ LOGGING = {
 
 AUTH_USER_MODEL = 'account.MyUser'
 
+settings_file = open("settings.json")
+SETTINGS_JSON = json.loads(settings_file.read())
 
 EMAIL_USE_TLS = os.environ['EMAIL_USE_TLS']
 EMAIL_HOST = os.environ['EMAIL_HOST']
