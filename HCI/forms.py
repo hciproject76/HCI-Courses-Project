@@ -1,55 +1,104 @@
-import requests
+from dal import autocomplete
 from django import forms
-from django.contrib.auth import password_validation, get_user_model
-from django.contrib.auth.forms import UserCreationForm, UsernameField
-from django.utils.translation import gettext_lazy as _
+from django.forms import TextInput, Textarea, Select
+from django.urls import reverse_lazy
 
-from HCI_Course.settings import RECAPTCHA_KEY, RECAPTCHA_URL
+from HCI import choices
+from HCI.choices import get_all_states
+from HCI.models import Course, University
+from HCI.widgets import MyDateInput
 
 
-class SignupForm(UserCreationForm):
-
-    username = UsernameField(
-        label=_("Username"),
-        strip=False,
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
-    )
-
-    email = forms.EmailField(
-        label=_("Email"),
-        max_length=200,
-        widget=forms.EmailInput(attrs={'class': 'form-control'}),
-    )
-
-    password1 = forms.CharField(
-        label=_("Password"),
-        strip=False,
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        help_text=password_validation.password_validators_help_text_html(),
-    )
-
-    password2 = forms.CharField(
-        label=_("Password confirmation"),
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        strip=False,
-    )
-
-    def is_valid(self):
-        response = self.data['g-recaptcha-response']
-
-        r = requests.post(RECAPTCHA_URL, {
-            'secret': RECAPTCHA_KEY,
-            'response': response,
-        })
-
-        data = r.json()
-
-        if not data['success']:
-            self.add_error(None, 'reCaptcha should be validate')
-            return False
-
-        return super(SignupForm, self).is_valid()
-
+class CourseCreateForm(forms.ModelForm):
     class Meta:
-        model = get_user_model()
-        fields = ('username', 'email', 'password1', 'password2')
+        model = Course
+        fields = ['name', 'code', 'university', 'description', 'category', 'url', 'prerequisites', 'core_for_major',
+                  'last_taught', 'instructor', 'learning_goals', 'equivalent']
+
+    name = forms.CharField(
+        widget=TextInput(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    code = forms.CharField(
+        widget=TextInput(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    university = forms.ModelChoiceField(
+        queryset=University.objects.all(),
+        widget=autocomplete.ModelSelect2(
+            url='university:auto_complete',
+        ),
+        help_text="Don't find your university? <a href=\"{}\">Add one.</a>",
+    )
+
+    description = forms.CharField(
+        widget=Textarea(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    category = forms.ChoiceField(
+        choices=choices.CATEGORY_CHOICES,
+        widget=Select(
+            attrs={
+                'class': 'form-control'
+            }
+        )
+    )
+
+    url = forms.URLField(
+        widget=TextInput(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    prerequisites = forms.CharField(
+        widget=TextInput(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    last_taught = forms.DateField(
+        widget=MyDateInput()
+    )
+
+    instructor = forms.CharField(
+        widget=TextInput(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    learning_goals = forms.CharField(
+        widget=Textarea(attrs={
+            'class': 'form-control'
+        })
+    )
+
+    equivalent = forms.ModelMultipleChoiceField(
+        queryset=Course.objects.all(),
+        widget=autocomplete.ModelSelect2Multiple(
+            url='course:auto_complete',
+            attrs={
+                'class': 'form-control',
+            }
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['university'].help_text = self.fields['university'].help_text.format(reverse_lazy('university:add'))
+
+
+class UniversityCreateForm(forms.ModelForm):
+    class Meta:
+        model = University
+        fields = ['name', 'short_name', 'country', 'state', 'city']
+
+    state = forms.ChoiceField(
+        choices=get_all_states(),
+        widget=autocomplete.Select2(url='university:state_auto_complete', forward=['country'])
+    )

@@ -1,18 +1,21 @@
-from django.contrib.auth.decorators import permission_required
+from dal import autocomplete
+from django.contrib.auth.decorators import permission_required, login_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse_lazy, reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, ListView, DetailView, UpdateView
 
+from HCI.choices import get_all_states, ALL_STATES
+from HCI.forms import CourseCreateForm, UniversityCreateForm
 from HCI.models import University, Course
 
 
-@method_decorator(permission_required('HCI.add_university'), name='dispatch')
+@method_decorator(login_required, name='dispatch')
 class UniversityCreateView(CreateView):
     model = University
     template_name = 'models/university_create.html'
     success_url = reverse_lazy('university:add')
-    fields = ['name', 'short_name']
+    form_class = UniversityCreateForm
 
     def form_valid(self, form):
         response = super(UniversityCreateView, self).form_valid(form)
@@ -23,13 +26,12 @@ class UniversityCreateView(CreateView):
         return response
 
 
-@method_decorator(permission_required('HCI.add_course'), name='dispatch')
+@method_decorator(login_required, name='dispatch')
 class CourseCreateView(CreateView):
     model = Course
     template_name = 'models/course_create.html'
     success_url = reverse_lazy('course:add')
-    fields = ['name', 'code', 'university', 'description', 'url', 'prerequisites', 'core_for_major',
-              'last_taught', 'instructor', 'learning_goals', 'equivalent']
+    form_class = CourseCreateForm
 
     def form_valid(self, form):
         response = super(CourseCreateView, self).form_valid(form)
@@ -109,3 +111,36 @@ class UniversityUpdateView(UpdateView):
 
     def get_success_url(self):
         return reverse('university:detail_view', None, [self.kwargs.get('pk'), ])
+
+
+class UniversityAutoComplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = University.objects.all()
+        if self.q:
+            qs = qs.filter(name__contains=self.q)
+        return qs
+
+
+class CourseEquivalentAutoComplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = Course.objects.all()
+        if self.q:
+            qs = qs.filter(name__contains=self.q)
+        return qs
+
+
+class StateAutoComplete(autocomplete.Select2ListView):
+
+    def get_list(self):
+        country = self.forwarded.get('country', None)
+        if not country or country not in ALL_STATES:
+            return []
+        return ALL_STATES[country].items()
+
+    def autocomplete_results(self, results):
+        token = self.q or ""
+        return [(x, y) for (x, y) in results if token.lower() in (x + y).lower()]
+
+    def results(self, results):
+        """Return the result dictionary."""
+        return [dict(id=x[0], text=x[1]) for x in results]
